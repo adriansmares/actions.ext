@@ -581,6 +581,17 @@ methodmap ActionComponent < Handle
 	}
 }
 
+stock Address __Actions_Address(any action, int offset)
+{
+#if SOURCEMOD_V_MAJOR > 1 || SOURCEMOD_V_MINOR >= 13
+	// Actions are 32-bit handles to pointers, so zero-extend them
+	Address base = view_as<Address>(view_as<int>(action)) & ((view_as<Address>(1) << 32) - view_as<Address>(1));
+	return base + view_as<Address>(offset);
+#else
+	return view_as<Address>(action) + view_as<Address>(offset);
+#endif
+}
+
 methodmap BehaviorAction < BehaviorActionListeners
 {
 	public BehaviorAction(any action)
@@ -815,7 +826,7 @@ methodmap BehaviorAction < BehaviorActionListeners
  	*/
 	public any Get( int offset, NumberType type = NumberType_Int32 )
 	{
-		return view_as<any>(LoadFromAddress(view_as<Address>(this) + view_as<Address>(offset), type));
+		return view_as<any>(LoadFromAddress(__Actions_Address(this, offset), type));
 	}
 	
 	/**
@@ -830,12 +841,12 @@ methodmap BehaviorAction < BehaviorActionListeners
  #if SOURCEMOD_V_MINOR < 11
 	public void Set( int offset, any data, NumberType type = NumberType_Int32 )
 	{
-		StoreToAddress(view_as<Address>(this) + view_as<Address>(offset), data, type);
+		StoreToAddress(__Actions_Address(this, offset), data, type);
 	}
  #else
 	public void Set( int offset, any data, NumberType type = NumberType_Int32, bool updateMemAccess = false )
 	{
-		StoreToAddress(view_as<Address>(this) + view_as<Address>(offset), data, type, updateMemAccess);
+		StoreToAddress(__Actions_Address(this, offset), data, type, updateMemAccess);
 	}
  #endif
 
